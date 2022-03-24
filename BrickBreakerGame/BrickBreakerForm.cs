@@ -29,12 +29,16 @@ namespace BrickBreakerGame
         int blockCols;
         int blockCount = 0;
         bool gameRunning = false;
+        Thread readThread;
 
         Random rand = new Random();
         public BrickBreakerForm()
         {
             InitializeComponent();
             InitializeSerialPortRead();
+
+            readThread = new Thread(Read);
+            readThread.Start();
         }
 
         ~BrickBreakerForm()
@@ -43,8 +47,8 @@ namespace BrickBreakerGame
         }
         private void ShowMenu(bool show = true)
         {
-            lblStart.Visible = show;
-            lblGameOver.Visible = show;
+            //lblStart.Visible = show;
+            //lblGameOver.Visible = show;
             if (!show)
             {
                 InitializeGame();
@@ -248,7 +252,7 @@ namespace BrickBreakerGame
         public void InitializeSerialPortRead()
         {
             StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
-            Thread readThread = new Thread(Read);
+            
 
             // Create a new SerialPort object with default settings.
             _serialPort = new SerialPort();
@@ -261,21 +265,11 @@ namespace BrickBreakerGame
             _serialPort.StopBits = StopBits.One;
 
             // Set the read/write timeouts
-            _serialPort.ReadTimeout = 500;
-            _serialPort.WriteTimeout = 500;
+            _serialPort.ReadTimeout = 50;
+            _serialPort.WriteTimeout = 50;
 
             _serialPort.Open();
             _continue = true;
-            readThread.Start();
-
-
-            while (_continue)
-            {
-
-            }
-
-            readThread.Join();
-            _serialPort.Close();
         }
         public void Read()
         {

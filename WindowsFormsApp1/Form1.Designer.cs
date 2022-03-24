@@ -202,6 +202,7 @@ namespace WindowsFormsApp1
             this.tBoxDataOut.Size = new System.Drawing.Size(162, 233);
             this.tBoxDataOut.TabIndex = 3;
             this.tBoxDataOut.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tBoxDataOutButton);
+            this.tBoxDataOut.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tBoxDataOut_KeyUp);
             // 
             // btnClose
             // 
