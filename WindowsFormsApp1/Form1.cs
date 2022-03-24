@@ -36,14 +36,26 @@ namespace WindowsFormsApp1
 
         private void tBoxDataOutButton(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Left && serialPort1.IsOpen)
+            if (serialPort1.isOpen)
             {
-                serialPort1.Write("L");
+                switch(e.KeyCode)
+                {
+                    case Keys.Left:
+                        serialPort1.Write("L");
+                        break;
+                    case Keys.Right:
+                        serialPort1.Write("R");
+                        break;
+                    case Keys.Space:
+                        serialPort1.Write("S");
+                        break;
+                    default:
+                        serialPort1.Write("N");
+                        break;
+
+                }
             }
-            if (e.KeyCode == Keys.Right && serialPort1.IsOpen)
-            {
-                serialPort1.Write("R");
-            }
+
         }
     }
 }

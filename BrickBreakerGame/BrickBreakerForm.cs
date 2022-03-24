@@ -7,13 +7,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO.Ports;
+using System.Threading;
 
 namespace BrickBreakerGame
 {
     public partial class BrickBreakerForm : Form
     {
-        Timer gameTimer = new Timer();
-
+        System.Windows.Forms.Timer gameTimer = new System.Windows.Forms.Timer();
+        SerialPort _serialPort;
+        bool _continue;
         int ballSpeed = 5;
         int ballDX = 1;
         int ballDY = 1;
@@ -31,8 +34,13 @@ namespace BrickBreakerGame
         public BrickBreakerForm()
         {
             InitializeComponent();
+            InitializeSerialPortRead();
         }
 
+        ~BrickBreakerForm()
+        {
+            _continue = false;
+        }
         private void ShowMenu(bool show = true)
         {
             lblStart.Visible = show;
@@ -170,7 +178,7 @@ namespace BrickBreakerGame
             {
                 ballDY = -ballDY;
                 blockCount -= blockHitCount;
-                if(blockCount == 0)
+                if (blockCount == 0)
                 {
                     ShowMenu();
                 }
@@ -209,7 +217,7 @@ namespace BrickBreakerGame
 
         private void BrickBreakerForm_KeyDown(object sender, KeyEventArgs e)
         {
-            switch (e.KeyCode)
+            /*switch (e.KeyCode)
             {
                 case Keys.Space:
                     if (!gameRunning)
@@ -229,12 +237,84 @@ namespace BrickBreakerGame
                         inputDX = paddleSpeed;
                     }
                     break;
-            }
+            }*/
         }
 
         private void BrickBreakerForm_KeyUp(object sender, KeyEventArgs e)
         {
-            inputDX = 0;
+            /* inputDX = 0;*/
+        }
+
+        public void InitializeSerialPortRead()
+        {
+            StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
+            Thread readThread = new Thread(Read);
+
+            // Create a new SerialPort object with default settings.
+            _serialPort = new SerialPort();
+
+            // Allow the user to set the appropriate properties.
+            _serialPort.PortName = "COM2";
+            _serialPort.BaudRate = 9600;
+            _serialPort.Parity = Parity.None;
+            _serialPort.DataBits = 8;
+            _serialPort.StopBits = StopBits.One;
+
+            // Set the read/write timeouts
+            _serialPort.ReadTimeout = 500;
+            _serialPort.WriteTimeout = 500;
+
+            _serialPort.Open();
+            _continue = true;
+            readThread.Start();
+
+
+            while (_continue)
+            {
+
+            }
+
+            readThread.Join();
+            _serialPort.Close();
+        }
+        public void Read()
+        {
+            while (_continue)
+            {
+                try
+                {
+                    string message = _serialPort.ReadLine();
+                    switch (message)
+                    {
+                        case "S":
+                            if (!gameRunning)
+                            {
+                                ShowMenu(false);
+                            }
+                            break;
+                        case "L":
+                            if (gameRunning)
+                            {
+                                inputDX = -paddleSpeed;
+                            }
+                            break;
+                        case "R":
+                            if (gameRunning)
+                            {
+                                inputDX = paddleSpeed;
+                            }
+                            break;
+                        default:
+                            if (gameRunning)
+                            {
+                                inputDX = 0;
+                            }
+                            break;
+                    }
+                    Console.WriteLine(message);
+                }
+                catch (TimeoutException) { }
+            }
         }
     }
 }
