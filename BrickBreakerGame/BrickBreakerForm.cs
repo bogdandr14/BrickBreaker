@@ -15,8 +15,12 @@ namespace BrickBreakerGame
     public partial class BrickBreakerForm : Form
     {
         System.Windows.Forms.Timer gameTimer = new System.Windows.Forms.Timer();
-        SerialPort _serialPort;
-        bool _continue;
+
+        SerialPort _serialPort = null;
+        bool _continue = false;
+        Thread readThread;
+        string serialValue;
+
         int ballSpeed = 5;
         int ballDX = 1;
         int ballDY = 1;
@@ -29,7 +33,6 @@ namespace BrickBreakerGame
         int blockCols;
         int blockCount = 0;
         bool gameRunning = false;
-        Thread readThread;
 
         Random rand = new Random();
         public BrickBreakerForm()
@@ -37,7 +40,7 @@ namespace BrickBreakerGame
             InitializeComponent();
             InitializeSerialPortRead();
 
-            readThread = new Thread(Read);
+            readThread = new Thread(ReadData);
             readThread.Start();
         }
 
@@ -106,10 +109,14 @@ namespace BrickBreakerGame
 
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            MovePaddle(picPaddle.Left + inputDX);
-            MoveBall(picBall.Left + ballSpeed * ballDX, picBall.Top + ballSpeed * ballDY);
-            DetectCollisionWithPaddle();
-            DetectCollisionWithBrick();
+            DetectPaddleInput();
+            if (gameRunning)
+            {
+                MovePaddle(picPaddle.Left + inputDX);
+                MoveBall(picBall.Left + ballSpeed * ballDX, picBall.Top + ballSpeed * ballDY);
+                DetectCollisionWithPaddle();
+                DetectCollisionWithBrick();
+            }
         }
 
         private void MoveBall(int newXPos, int newYPos)
@@ -129,6 +136,37 @@ namespace BrickBreakerGame
             {
                 //GAME OVER
                 ShowMenu();
+            }
+        }
+
+        private void DetectPaddleInput()
+        {
+            switch (serialValue)
+            {
+                case "S":
+                    if (!gameRunning)
+                    {
+                        ShowMenu(false);
+                    }
+                    break;
+                case "L":
+                    if (gameRunning)
+                    {
+                        inputDX = -paddleSpeed;
+                    }
+                    break;
+                case "R":
+                    if (gameRunning)
+                    {
+                        inputDX = paddleSpeed;
+                    }
+                    break;
+                default:
+                    if (gameRunning)
+                    {
+                        inputDX = 0;
+                    }
+                    break;
             }
         }
 
@@ -252,7 +290,6 @@ namespace BrickBreakerGame
         public void InitializeSerialPortRead()
         {
             StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
-            
 
             // Create a new SerialPort object with default settings.
             _serialPort = new SerialPort();
@@ -271,41 +308,21 @@ namespace BrickBreakerGame
             _serialPort.Open();
             _continue = true;
         }
-        public void Read()
+        public void ReadData()
         {
+            while (!_continue)
+            {
+                Thread.Sleep(16);
+            }
+
             while (_continue)
             {
                 try
                 {
                     string message = _serialPort.ReadLine();
-                    switch (message)
-                    {
-                        case "S":
-                            if (!gameRunning)
-                            {
-                                ShowMenu(false);
-                            }
-                            break;
-                        case "L":
-                            if (gameRunning)
-                            {
-                                inputDX = -paddleSpeed;
-                            }
-                            break;
-                        case "R":
-                            if (gameRunning)
-                            {
-                                inputDX = paddleSpeed;
-                            }
-                            break;
-                        default:
-                            if (gameRunning)
-                            {
-                                inputDX = 0;
-                            }
-                            break;
-                    }
+                    serialValue = message;
                     Console.WriteLine(message);
+                    Thread.Sleep(16);
                 }
                 catch (TimeoutException) { }
             }

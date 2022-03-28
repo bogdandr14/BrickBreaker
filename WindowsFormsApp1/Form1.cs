@@ -82,13 +82,13 @@ namespace WindowsFormsApp1
         {
             while (!_continue)
             {
-                Thread.Sleep(50);
+                Thread.Sleep(16);
             }
 
             while (_continue)
             {
                 _serialPort.WriteLine(toSend);
-                Thread.Sleep(50);
+                Thread.Sleep(16);
             }
         }
     }
