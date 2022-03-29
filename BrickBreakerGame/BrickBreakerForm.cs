@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.IO.Ports;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace BrickBreakerGame
 {
@@ -21,11 +15,10 @@ namespace BrickBreakerGame
         Thread readThread;
         string serialValue;
 
-        int ballSpeed = 5;
-        int ballDX = 1;
-        int ballDY = 1;
+        int ballDX = 0;
+        int ballDY = 5;
 
-        int paddleSpeed = 10;
+        int paddleSpeed = 15;
         int inputDX = 0;
 
         Image[,] Blocks;
@@ -50,14 +43,15 @@ namespace BrickBreakerGame
         }
         private void ShowMenu(bool show = true)
         {
-            //lblStart.Visible = show;
-            //lblGameOver.Visible = show;
+            lblStart.Visible = show;
+            lblGameOver.Visible = show;
             if (!show)
             {
                 InitializeGame();
+                ballDX = 0;
+                ballDY = 5;
             }
             gameRunning = !show;
-            gameTimer.Enabled = !show;
             Invalidate();
         }
 
@@ -94,6 +88,7 @@ namespace BrickBreakerGame
 
             gameTimer.Interval = 16; //60fps
             gameTimer.Tick += GameTimer_Tick;
+            gameTimer.Enabled = true;
         }
 
         private void InitializeGame()
@@ -113,7 +108,7 @@ namespace BrickBreakerGame
             if (gameRunning)
             {
                 MovePaddle(picPaddle.Left + inputDX);
-                MoveBall(picBall.Left + ballSpeed * ballDX, picBall.Top + ballSpeed * ballDY);
+                MoveBall(picBall.Left + ballDX, picBall.Top + ballDY);
                 DetectCollisionWithPaddle();
                 DetectCollisionWithBrick();
             }
@@ -127,10 +122,26 @@ namespace BrickBreakerGame
             if (ballPos.X < 0 || ballPos.X > ClientRectangle.Width - picBall.Width)
             {
                 ballDX = -ballDX;
+                if (ballDY < 0)
+                {
+                    ballDY = rand.Next(5, 10) * -1;
+                }
+                else
+                {
+                    ballDY = rand.Next(5, 10);
+                }
             }
             if (ballPos.Y < 0)
             {
                 ballDY = -ballDY;
+                if (ballDX < 0)
+                {
+                    ballDX = rand.Next(5, 10) * -1;
+                }
+                else
+                {
+                    ballDX = rand.Next(5, 10);
+                }
             }
             if (ballPos.Y > ClientRectangle.Height)
             {
@@ -175,6 +186,14 @@ namespace BrickBreakerGame
             if (picBall.Bounds.IntersectsWith(picPaddle.Bounds))
             {
                 ballDY = -ballDY;
+                if (ballDX < 0)
+                {
+                    ballDX = rand.Next(5, 10) * -1;
+                }
+                else
+                {
+                    ballDX = rand.Next(5, 10);
+                }
             }
         }
 
@@ -219,6 +238,14 @@ namespace BrickBreakerGame
             if (blockHitCount > 0)
             {
                 ballDY = -ballDY;
+                if (ballDX < 0)
+                {
+                    ballDX = rand.Next(5, 10) * -1;
+                }
+                else
+                {
+                    ballDX = rand.Next(5, 10);
+                }
                 blockCount -= blockHitCount;
                 if (blockCount == 0)
                 {
@@ -322,7 +349,6 @@ namespace BrickBreakerGame
                     string message = _serialPort.ReadLine();
                     serialValue = message;
                     Console.WriteLine(message);
-                    Thread.Sleep(16);
                 }
                 catch (TimeoutException) { }
             }
