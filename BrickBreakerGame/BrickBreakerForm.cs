@@ -27,6 +27,13 @@ namespace BrickBreakerGame
         int blockCount = 0;
         bool gameRunning = false;
 
+
+        int imgWidth;
+        int imgHeight;
+        int initialXpos;
+        int initialYpos;
+
+
         Random rand = new Random();
         public BrickBreakerForm()
         {
@@ -100,6 +107,11 @@ namespace BrickBreakerGame
             blockRows = 7;
             blockCols = imageList1.Images.Count * 2;
             blockCount = MakeBlocks(blockRows, blockCols);
+
+            imgWidth = imageList1.ImageSize.Width;
+            imgHeight = imageList1.ImageSize.Height;
+            initialXpos = (ClientRectangle.Width - imgWidth * blockCols) / 2;
+            initialYpos = 30;
         }
 
         private void GameTimer_Tick(object sender, EventArgs e)
@@ -121,27 +133,11 @@ namespace BrickBreakerGame
 
             if (ballPos.X < 0 || ballPos.X > ClientRectangle.Width - picBall.Width)
             {
-                ballDX = -ballDX;
-                if (ballDY < 0)
-                {
-                    ballDY = rand.Next(5, 10) * -1;
-                }
-                else
-                {
-                    ballDY = rand.Next(5, 10);
-                }
+                InvertBallHorizontalDirection();
             }
             if (ballPos.Y < 0)
             {
-                ballDY = -ballDY;
-                if (ballDX < 0)
-                {
-                    ballDX = rand.Next(5, 10) * -1;
-                }
-                else
-                {
-                    ballDX = rand.Next(5, 10);
-                }
+                InvertBallVerticalDirection();
             }
             if (ballPos.Y > ClientRectangle.Height)
             {
@@ -185,73 +181,118 @@ namespace BrickBreakerGame
         {
             if (picBall.Bounds.IntersectsWith(picPaddle.Bounds))
             {
-                ballDY = -ballDY;
-                if (ballDX < 0)
-                {
-                    ballDX = rand.Next(5, 10) * -1;
-                }
-                else
-                {
-                    ballDX = rand.Next(5, 10);
-                }
+                InvertBallVerticalDirection();
             }
         }
 
+        private void InvertBallVerticalDirection()
+        {
+            ballDY = -ballDY;
+            if (ballDX < 0)
+            {
+                ballDX = rand.Next(5, 10) * -1;
+            }
+            else
+            {
+                ballDX = rand.Next(5, 10);
+            }
+        }
+
+        private void InvertBallHorizontalDirection()
+        {
+            ballDX = -ballDX;
+            if (ballDY < 0)
+            {
+                ballDY = rand.Next(5, 10) * -1;
+            }
+            else
+            {
+                ballDY = rand.Next(5, 10);
+            }
+        }
         private void DetectCollisionWithBrick()
         {
             Point ballPos = picBall.Location;
-            Point[] ballCornersPoints = new Point[]
+
+            DetectHorizontalBallCollisions(ballPos);
+            DetectVerticalBallCollisions(ballPos);
+
+            if (blockCount == 0)
             {
-                new Point(ballPos.X, ballPos.Y),
-                new Point(ballPos.X + picBall.Width, ballPos.Y),
-                new Point(ballPos.X, ballPos.Y + picBall.Height),
-                new Point(ballPos.X +picBall.Width, ballPos.Y + picBall.Height),
-            };
-            int imgWidth = imageList1.ImageSize.Width;
-            int imgHeight = imageList1.ImageSize.Height;
+                ShowMenu();
+            }
+        }
 
-            int initialXpos = (ClientRectangle.Width - imgWidth * blockCols) / 2;
-            int initialYpos = 30;
-
+        private void DetectVerticalBallCollisions(Point ballPos)
+        {
             int blockHitCount = 0;
-            foreach (Point bollCorner in ballCornersPoints)
+
+            Point[] ballVerticalCollisionPoints = new Point[]
             {
-                int currentBrickRow = (bollCorner.Y - initialYpos) / imgHeight;
-                int currentBrickCol = (bollCorner.X - initialXpos) / imgWidth;
-                if (currentBrickCol >= 0 && currentBrickCol < blockCols && currentBrickRow >= 0 && currentBrickRow < blockRows)
+                new Point(ballPos.X + picBall.Width / 2, ballPos.Y),
+                new Point(ballPos.X + picBall.Width / 2, ballPos.Y + picBall.Height)
+            };
+
+            foreach (Point horizontalPoint in ballVerticalCollisionPoints)
+            {
+                if (DetectCollisionPoint(horizontalPoint))
                 {
-                    if (Blocks[currentBrickRow, currentBrickCol] != null)
-                    {
-                        Blocks[currentBrickRow, currentBrickCol] = null;
-                        Rectangle rectangleToInvalidate = new Rectangle()
-                        {
-                            X = initialXpos + currentBrickCol * imgWidth,
-                            Y = initialYpos + currentBrickRow * imgHeight,
-                            Width = imgWidth,
-                            Height = imgHeight
-                        };
-                        Invalidate(rectangleToInvalidate);
-                        ++blockHitCount;
-                    }
+                    ++blockHitCount;
                 }
             }
+
             if (blockHitCount > 0)
             {
-                ballDY = -ballDY;
-                if (ballDX < 0)
-                {
-                    ballDX = rand.Next(5, 10) * -1;
-                }
-                else
-                {
-                    ballDX = rand.Next(5, 10);
-                }
+                InvertBallVerticalDirection();
                 blockCount -= blockHitCount;
-                if (blockCount == 0)
+            }
+        }
+
+        private void DetectHorizontalBallCollisions(Point ballPos)
+        {
+            int blockHitCount = 0;
+
+            Point[] ballHorizontalCollisionPoints = new Point[]
+            {
+                new Point(ballPos.X, ballPos.Y + picBall.Height / 2),
+                new Point(ballPos.X + picBall.Width, ballPos.Y + picBall.Height / 2),
+            };
+            foreach (Point horizontalPoint in ballHorizontalCollisionPoints)
+            {
+                if (DetectCollisionPoint(horizontalPoint))
                 {
-                    ShowMenu();
+                    ++blockHitCount;
                 }
             }
+
+            if (blockHitCount > 0)
+            {
+                InvertBallHorizontalDirection();
+                blockCount -= blockHitCount;
+            }
+        }
+
+        private bool DetectCollisionPoint(Point point)
+        {
+            int currentBrickRow = (point.Y - initialYpos) / imgHeight;
+            int currentBrickCol = (point.X - initialXpos) / imgWidth;
+            if (currentBrickCol >= 0 && currentBrickCol < blockCols && currentBrickRow >= 0 && currentBrickRow < blockRows)
+            {
+                if (Blocks[currentBrickRow, currentBrickCol] != null)
+                {
+                    Blocks[currentBrickRow, currentBrickCol] = null;
+                    Rectangle rectangleToInvalidate = new Rectangle()
+                    {
+                        X = initialXpos + currentBrickCol * imgWidth,
+                        Y = initialYpos + currentBrickRow * imgHeight,
+                        Width = imgWidth,
+                        Height = imgHeight
+                    };
+                    Invalidate(rectangleToInvalidate);
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void BrickBreakerForm_Paint(object sender, PaintEventArgs e)
