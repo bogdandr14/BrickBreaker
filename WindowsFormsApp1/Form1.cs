@@ -58,14 +58,14 @@ namespace WindowsFormsApp1
             {
                 switch(e.KeyCode)
                 {
-                    case Keys.Left:
-                        toSend = "L";
+                    case Keys.A:
+                        toSend = "A";
                         break;
-                    case Keys.Right:
+                    case Keys.D:
+                        toSend = "D";
+                        break;
+                    case Keys.R:
                         toSend = "R";
-                        break;
-                    case Keys.Space:
-                        toSend = "S";
                         break;
                     default:
                         break;

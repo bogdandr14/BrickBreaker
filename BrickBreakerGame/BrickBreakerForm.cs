@@ -150,19 +150,19 @@ namespace BrickBreakerGame
         {
             switch (serialValue)
             {
-                case "S":
+                case "R":
                     if (!gameRunning)
                     {
                         ShowMenu(false);
                     }
                     break;
-                case "L":
+                case "A":
                     if (gameRunning)
                     {
                         inputDX = -paddleSpeed;
                     }
                     break;
-                case "R":
+                case "D":
                     if (gameRunning)
                     {
                         inputDX = paddleSpeed;
@@ -190,11 +190,11 @@ namespace BrickBreakerGame
             ballDY = -ballDY;
             if (ballDX < 0)
             {
-                ballDX = rand.Next(5, 10) * -1;
+                ballDX = rand.Next(5, 7) * -1;
             }
             else
             {
-                ballDX = rand.Next(5, 10);
+                ballDX = rand.Next(5, 7);
             }
         }
 
@@ -203,11 +203,11 @@ namespace BrickBreakerGame
             ballDX = -ballDX;
             if (ballDY < 0)
             {
-                ballDY = rand.Next(5, 10) * -1;
+                ballDY = rand.Next(5, 7) * -1;
             }
             else
             {
-                ballDY = rand.Next(5, 10);
+                ballDY = rand.Next(5, 7);
             }
         }
         private void DetectCollisionWithBrick()
